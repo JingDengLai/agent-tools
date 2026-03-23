@@ -200,6 +200,44 @@
             color: #999;
             margin-top: 5px;
         }
+
+        .code-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .code-group input {
+            flex: 1;
+        }
+
+        .send-code-btn {
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.3s, opacity 0.3s;
+        }
+
+        .send-code-btn:hover:not(:disabled) {
+            background: #5a6fd6;
+        }
+
+        .send-code-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #ccc;
+        }
+
+        .code-countdown {
+            color: #999;
+            font-size: 14px;
+            padding: 12px 15px;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -247,6 +285,22 @@
                     pattern="^1[3-9]\d{9}$"
                 >
                 <span class="error-message" id="phoneError"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="verifyCode">验证码</label>
+                <div class="code-group">
+                    <input
+                        type="text"
+                        id="verifyCode"
+                        name="verifyCode"
+                        placeholder="请输入短信验证码"
+                        required
+                        maxlength="6"
+                    >
+                    <button type="button" class="send-code-btn" id="sendCodeBtn">获取验证码</button>
+                </div>
+                <span class="error-message" id="verifyCodeError"></span>
             </div>
 
             <div class="form-group">
@@ -321,6 +375,11 @@
             phone: (value) => {
                 if (!value.trim()) return '请输入手机号';
                 if (!/^1[3-9]\d{9}$/.test(value)) return '请输入有效的手机号';
+                return '';
+            },
+            verifyCode: (value) => {
+                if (!value.trim()) return '请输入验证码';
+                if (!/^\d{6}$/.test(value)) return '验证码为 6 位数字';
                 return '';
             },
             password: (value) => {
@@ -407,6 +466,37 @@
             validateField('phone', this.value);
         });
 
+        // 发送验证码
+        const sendCodeBtn = document.getElementById('sendCodeBtn');
+        sendCodeBtn.addEventListener('click', function() {
+            const phone = document.getElementById('phone').value;
+
+            // 先验证手机号
+            if (!validateField('phone', phone)) {
+                return;
+            }
+
+            // 模拟发送验证码
+            sendCodeBtn.disabled = true;
+            let countdown = 60;
+            sendCodeBtn.textContent = `${countdown}秒后重发`;
+
+            const timer = setInterval(() => {
+                countdown--;
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    sendCodeBtn.disabled = false;
+                    sendCodeBtn.textContent = '获取验证码';
+                } else {
+                    sendCodeBtn.textContent = `${countdown}秒后重发`;
+                }
+            }, 1000);
+
+            // 模拟 API 请求
+            console.log(`向手机号 ${phone} 发送验证码`);
+            alert('验证码已发送（模拟）：123456');
+        });
+
         document.getElementById('password').addEventListener('input', function() {
             checkPasswordStrength(this.value);
             validateField('password', this.value);
@@ -429,6 +519,7 @@
             const username = document.getElementById('username').value;
             const email = document.getElementById('email').value;
             const phone = document.getElementById('phone').value;
+            const verifyCode = document.getElementById('verifyCode').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const agreement = document.getElementById('agreement').checked;
@@ -439,6 +530,7 @@
             if (!validateField('username', username)) isValid = false;
             if (!validateField('email', email)) isValid = false;
             if (!validateField('phone', phone)) isValid = false;
+            if (!validateField('verifyCode', verifyCode)) isValid = false;
             if (!validateField('password', password)) isValid = false;
             if (!validateField('confirmPassword', confirmPassword, password)) isValid = false;
 
@@ -459,7 +551,7 @@
 
                 // 模拟 API 调用
                 setTimeout(() => {
-                    console.log('注册数据:', { username, email, phone, password });
+                    console.log('注册数据:', { username, email, phone, verifyCode, password });
                     alert('注册成功！');
                     submitBtn.disabled = false;
                     submitBtn.textContent = '立即注册';
