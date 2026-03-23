@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash .claude/skills/git-workflow/scripts/auto-git.sh \"实现登录页面\")",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr:*)",
+      "Bash(bash .claude/skills/git-workflow/scripts/auto-git.sh \"添加用户个人中心页面\")",
+      "Bash(git branch:*)"
+    ]
+  }
+}

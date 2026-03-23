@@ -82,8 +82,25 @@ else
   git checkout -b $BRANCH
 fi
 
-# ========= 检查是否有改动 =========
-if git diff --cached --quiet && git diff --quiet; then
+# ========= 检查是否有改动（包括 untracked 文件）========
+HAS_CHANGES=false
+
+# 检查 staged 改动
+if ! git diff --cached --quiet; then
+  HAS_CHANGES=true
+fi
+
+# 检查 unstaged 改动
+if ! git diff --quiet; then
+  HAS_CHANGES=true
+fi
+
+# 检查 untracked 文件
+if [ -n "$(git ls-files --others --exclude-standard)" ]; then
+  HAS_CHANGES=true
+fi
+
+if [ "$HAS_CHANGES" = false ]; then
   echo "⚠️ 没有检测到代码改动，跳过提交"
 else
   # ========= 提交 =========
