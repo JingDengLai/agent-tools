@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .profile-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .profile-header {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            margin-bottom: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            font-weight: 600;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .avatar-input {
+            display: none;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-info h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .user-info p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .user-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .profile-content {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .profile-nav {
+            display: flex;
+            border-bottom: 1px solid #eee;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav-item:hover {
+            color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 500;
+        }
+
+        .panel {
+            display: none;
+            padding: 30px;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group .help-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-outline {
+            background: white;
+            color: #667eea;
+            border: 1px solid #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .security-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .security-info {
+            flex: 1;
+        }
+
+        .security-info h3 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .security-info p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .security-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-verified {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-unverified {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .notification-item:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+        }
+
+        .notification-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .notification-label {
+            flex: 1;
+        }
+
+        .notification-label h3 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .notification-label p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .logout-section {
+            padding: 20px 30px;
+            background: #fef2f2;
+            border-top: 1px solid #fee2e2;
+        }
+
+        .logout-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .user-stats {
+                justify-content: center;
+            }
+
+            .profile-nav {
+                overflow-x: auto;
+            }
+
+            .nav-item {
+                white-space: nowrap;
+                padding: 15px 20px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .security-item,
+            .notification-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <!-- 用户信息头部 -->
+        <div class="profile-header">
+            <div class="avatar" id="avatar" title="点击更换头像">
+                <span id="avatarText">U</span>
+            </div>
+            <input type="file" class="avatar-input" id="avatarInput" accept="image/*">
+            <div class="user-info">
+                <h1 id="displayUsername">用户名</h1>
+                <p id="displayEmail">email@example.com</p>
+                <div class="user-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">收藏</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">关注</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">粉丝</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要内容 -->
+        <div class="profile-content">
+            <div class="profile-nav">
+                <div class="nav-item active" data-panel="basic">基本信息</div>
+                <div class="nav-item" data-panel="security">账户安全</div>
+                <div class="nav-item" data-panel="notification">消息通知</div>
+            </div>
+
+            <!-- 基本信息 -->
+            <div class="panel active" id="basicPanel">
+                <h2 class="panel-title">基本信息</h2>
+                <form id="basicForm">
+                    <div class="form-group">
+                        <label for="username">用户名</label>
+                        <input type="text" id="username" name="username" placeholder="请输入用户名" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">邮箱</label>
+                        <input type="email" id="email" name="email" placeholder="请输入邮箱" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">手机号</label>
+                        <input type="tel" id="phone" name="phone" placeholder="请输入手机号">
+                        <div class="help-text">用于账户找回和重要通知</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="bio">个人简介</label>
+                        <textarea id="bio" name="bio" placeholder="介绍一下自己吧~" maxlength="200"></textarea>
+                        <div class="help-text"><span id="bioCount">0</span>/200</div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">保存修改</button>
+                        <button type="reset" class="btn btn-outline">重置</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 账户安全 -->
+            <div class="panel" id="securityPanel">
+                <h2 class="panel-title">账户安全</h2>
+                <div class="security-item">
+                    <div class="security-info">
+                        <h3>登录密码</h3>
+                        <p>定期修改密码可以提高账户安全性</p>
+                    </div>
+                    <button type="button" class="btn btn-outline" onclick="showChangePassword()">修改</button>
+                </div>
+                <div class="security-item">
+                    <div class="security-info">
+                        <h3>邮箱验证</h3>
+                        <p>绑定邮箱可在忘记密码时快速找回</p>
+                    </div>
+                    <span class="security-status status-verified">已验证</span>
+                </div>
+                <div class="security-item">
+                    <div class="security-info">
+                        <h3>手机验证</h3>
+                        <p>绑定手机可接收重要通知</p>
+                    </div>
+                    <button type="button" class="btn btn-outline" onclick="bindPhone()">绑定</button>
+                </div>
+            </div>
+
+            <!-- 消息通知 -->
+            <div class="panel" id="notificationPanel">
+                <h2 class="panel-title">消息通知设置</h2>
+                <div class="notification-item">
+                    <input type="checkbox" class="notification-checkbox" id="notifySystem" checked>
+                    <label class="notification-label" for="notifySystem">
+                        <h3>系统通知</h3>
+                        <p>系统维护、功能更新等重要通知</p>
+                    </label>
+                </div>
+                <div class="notification-item">
+                    <input type="checkbox" class="notification-checkbox" id="notifyActivity" checked>
+                    <label class="notification-label" for="notifyActivity">
+                        <h3>活动通知</h3>
+                        <p>优惠活动、促销信息通知</p>
+                    </label>
+                </div>
+                <div class="notification-item">
+                    <input type="checkbox" class="notification-checkbox" id="notifyComment">
+                    <label class="notification-label" for="notifyComment">
+                        <h3>评论回复</h3>
+                        <p>有人评论或回复时通知</p>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-primary" onclick="saveNotification()">保存设置</button>
+                </div>
+            </div>
+
+            <!-- 退出登录 -->
+            <div class="logout-section">
+                <button type="button" class="btn btn-danger logout-btn" onclick="logout()">
+                    <span>退出登录</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟当前用户数据
+        const currentUser = {
+            username: 'demo_user',
+            email: 'demo@example.com',
+            phone: '',
+            bio: ''
+        };
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 填充用户数据
+            document.getElementById('displayUsername').textContent = currentUser.username;
+            document.getElementById('displayEmail').textContent = currentUser.email;
+            document.getElementById('avatarText').textContent = currentUser.username.charAt(0).toUpperCase();
+
+            document.getElementById('username').value = currentUser.username;
+            document.getElementById('email').value = currentUser.email;
+            document.getElementById('phone').value = currentUser.phone;
+            document.getElementById('bio').value = currentUser.bio;
+        });
+
+        // 标签页切换
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const panelId = this.dataset.panel;
+
+                // 更新导航状态
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                this.classList.add('active');
+
+                // 更新面板显示
+                document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+                document.getElementById(panelId + 'Panel').classList.add('active');
+            });
+        });
+
+        // 头像更换
+        const avatar = document.getElementById('avatar');
+        const avatarInput = document.getElementById('avatarInput');
+
+        avatar.addEventListener('click', function() {
+            avatarInput.click();
+        });
+
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatar.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 个人简介字数统计
+        const bioInput = document.getElementById('bio');
+        const bioCount = document.getElementById('bioCount');
+
+        bioInput.addEventListener('input', function() {
+            bioCount.textContent = this.value.length;
+        });
+
+        // 基本信息表单提交
+        document.getElementById('basicForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                bio: document.getElementById('bio').value
+            };
+
+            // TODO: 实现实际的保存逻辑
+            console.log('保存基本信息:', formData);
+            alert('基本信息保存成功（演示）');
+
+            // 更新显示信息
+            document.getElementById('displayUsername').textContent = formData.username;
+            document.getElementById('displayEmail').textContent = formData.email;
+            document.getElementById('avatarText').textContent = formData.username.charAt(0).toUpperCase();
+        });
+
+        // 修改密码
+        function showChangePassword() {
+            const oldPassword = prompt('请输入当前密码:');
+            if (oldPassword === null) return;
+
+            const newPassword = prompt('请输入新密码:');
+            if (newPassword === null) return;
+
+            const confirmPassword = prompt('请确认新密码:');
+            if (confirmPassword === null) return;
+
+            if (newPassword !== confirmPassword) {
+                alert('两次输入的密码不一致');
+                return;
+            }
+
+            // TODO: 实现实际的修改密码逻辑
+            console.log('修改密码:', { oldPassword, newPassword });
+            alert('密码修改成功（演示）');
+        }
+
+        // 绑定手机
+        function bindPhone() {
+            const phone = prompt('请输入手机号码:');
+            if (phone === null) return;
+
+            // TODO: 实现实际的绑定手机逻辑
+            console.log('绑定手机:', phone);
+            document.getElementById('phone').value = phone;
+            currentUser.phone = phone;
+            alert('手机绑定成功（演示）');
+        }
+
+        // 保存通知设置
+        function saveNotification() {
+            const settings = {
+                system: document.getElementById('notifySystem').checked,
+                activity: document.getElementById('notifyActivity').checked,
+                comment: document.getElementById('notifyComment').checked
+            };
+
+            // TODO: 实现实际的保存逻辑
+            console.log('保存通知设置:', settings);
+            alert('通知设置保存成功（演示）');
+        }
+
+        // 退出登录
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                // TODO: 实现实际的退出逻辑
+                console.log('退出登录');
+                window.location.href = '/login.html';
+            }
+        }
+    </script>
+</body>
+</html>
