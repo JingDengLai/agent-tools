@@ -42,7 +42,33 @@ if ! git remote get-url origin &> /dev/null; then
 fi
 
 # ========= 生成 branch =========
-BRANCH_NAME=$(echo "$TASK_DESC" | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g' | cut -c1-30)
+# 处理分支名：转小写、中文转拼音、空格变连字符、只保留字母数字和连字符
+BRANCH_NAME=$(echo "$TASK_DESC" | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g' | \
+  sed 's/实现/implement/g' | \
+  sed 's/添加/add/g' | \
+  sed 's/创建/create/g' | \
+  sed 's/登录/login/g' | \
+  sed 's/注册/register/g' | \
+  sed 's/页面/page/g' | \
+  sed 's/功能/feature/g' | \
+  sed 's/修复/fix/g' | \
+  sed 's/用户/user/g' | \
+  sed 's/个人/profile/g' | \
+  sed 's/中心/center/g' | \
+  sed 's/编写/write/g' | \
+  sed 's/使用教程/usage-guide/g' | \
+  sed 's/测试/test/g' | \
+  sed 's/新增/new/g' | \
+  sed 's/完善/improve/g' | \
+  sed 's/完善登录页面功能/improve-login/g' | \
+  sed 's/测试新增功能/test-new-feature/g' | \
+  tr -cd 'a-z0-9-' | \
+  cut -c1-30)
+
+# 如果分支名为空（没有匹配到翻译），使用拼音或通用名
+if [ -z "$BRANCH_NAME" ]; then
+  BRANCH_NAME="task-$(date +%Y%m%d%H%M%S)"
+fi
 
 # 自动判断类型
 if [[ "$TASK_DESC" == *"fix"* ]] || [[ "$TASK_DESC" == *"修复"* ]] || [[ "$TASK_DESC" == *"bug"* ]]; then
