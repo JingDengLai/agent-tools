@@ -9,7 +9,9 @@
       "Bash(gh pr:*)",
       "Bash(bash .claude/skills/git-workflow/scripts/auto-git.sh \"添加用户个人中心页面\")",
       "Bash(git branch:*)",
-      "Bash(bash .claude/skills/git-workflow/scripts/auto-git.sh \"实现登录页面\" --commit)"
+      "Bash(bash .claude/skills/git-workflow/scripts/auto-git.sh \"实现登录页面\" --commit)",
+      "Bash(bash .claude/skills/git-workflow/scripts/auto-git.sh \"编写 README 使用教程\")",
+      "Bash(bash .claude/skills/git-workflow/scripts/auto-git.sh \"编写 README 使用教程\" --commit)"
     ]
   }
 }
