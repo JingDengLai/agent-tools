@@ -14,20 +14,6 @@ if [ -z "$TASK_DESC" ]; then
   exit 1
 fi
 
-# ========= 检查 gh CLI =========
-if ! command -v gh &> /dev/null; then
-  echo "❌ 未检测到 GitHub CLI (gh)"
-  echo "👉 请先安装：brew install gh"
-  exit 1
-fi
-
-# ========= 检查 gh 登录状态 =========
-if ! gh auth status &> /dev/null; then
-  echo "❌ 未登录 GitHub CLI"
-  echo "👉 请执行登录：gh auth login"
-  exit 1
-fi
-
 # ========= 检查是否在 git 仓库 =========
 if ! git rev-parse --is-inside-work-tree &> /dev/null; then
   echo "❌ 当前目录不是 Git 仓库"
@@ -41,8 +27,23 @@ if ! git remote get-url origin &> /dev/null; then
   exit 1
 fi
 
+# ========= 检测远程仓库类型 (GitHub / GitLab / Other) =========
+REMOTE_URL=$(git remote get-url origin)
+REPO_TYPE=""
+WEB_URL=""
+
+if [[ "$REMOTE_URL" == *"github.com"* ]] || [[ "$REMOTE_URL" == *"github"* ]]; then
+  REPO_TYPE="github"
+elif [[ "$REMOTE_URL" == *"gitlab.com"* ]] || [[ "$REMOTE_URL" == *"gitlab"* ]]; then
+  REPO_TYPE="gitlab"
+else
+  REPO_TYPE="other"
+fi
+
+echo "👉 检测到远程仓库类型：$REPO_TYPE"
+
 # ========= 生成 branch =========
-# 处理分支名：转小写、中文转拼音、空格变连字符、只保留字母数字和连字符
+# 处理分支名：转小写、中文转英文、空格变连字符、只保留字母数字和连字符
 BRANCH_NAME=$(echo "$TASK_DESC" | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g' | \
   sed 's/实现/implement/g' | \
   sed 's/添加/add/g' | \
@@ -51,7 +52,7 @@ BRANCH_NAME=$(echo "$TASK_DESC" | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g' | \
   sed 's/注册/register/g' | \
   sed 's/页面/page/g' | \
   sed 's/功能/feature/g' | \
-  sed 's/修复/fix/g' | \
+  sed 's/修复/fix/g; s/bug/fix/g' | \
   sed 's/用户/user/g' | \
   sed 's/个人/profile/g' | \
   sed 's/中心/center/g' | \
@@ -60,12 +61,13 @@ BRANCH_NAME=$(echo "$TASK_DESC" | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g' | \
   sed 's/测试/test/g' | \
   sed 's/新增/new/g' | \
   sed 's/完善/improve/g' | \
-  sed 's/完善登录页面功能/improve-login/g' | \
-  sed 's/测试新增功能/test-new-feature/g' | \
+  sed 's/文档/doc/g' | \
+  sed 's/-*feature//g' | \
   tr -cd 'a-z0-9-' | \
+  sed 's/^-//; s/-$//' | \
   cut -c1-30)
 
-# 如果分支名为空（没有匹配到翻译），使用拼音或通用名
+# 如果分支名为空（没有匹配到翻译），使用时间戳
 if [ -z "$BRANCH_NAME" ]; then
   BRANCH_NAME="task-$(date +%Y%m%d%H%M%S)"
 fi
@@ -94,12 +96,12 @@ if [ "$MODE" != "--commit" ]; then
   echo "✅ 分支已就绪：$BRANCH"
   echo "📝 请开始编写代码..."
   echo ""
-  echo "完成后再次运行以提交和创建 PR："
+  echo "完成后再次运行以提交和创建 MR/PR："
   echo "  bash scripts/auto-git.sh \"$TASK_DESC\" --commit"
   exit 0
 fi
 
-# ========= 模式 2: 提交并创建 PR（开发后） =========
+# ========= 模式 2: 提交并创建 MR/PR（开发后） =========
 echo "👉 切换到分支：$BRANCH"
 if git show-ref --verify --quiet refs/heads/$BRANCH; then
   git checkout $BRANCH
@@ -139,34 +141,102 @@ else
   git push -u origin $BRANCH
 fi
 
-# ========= 创建 PR =========
-echo "👉 检查 PR 创建能力..."
+# ========= 创建 MR/PR =========
+echo "👉 检查 MR/PR 创建能力..."
 
-if ! gh repo view &> /dev/null; then
-  echo "❌ 无法访问 GitHub 仓库"
-  echo "👉 请检查："
-  echo "   1. 当前仓库是否在 GitHub"
-  echo "   2. 是否有权限访问该仓库"
-  exit 1
-fi
+if [ "$REPO_TYPE" = "github" ]; then
+  # GitHub: 使用 gh CLI
+  if ! command -v gh &> /dev/null; then
+    echo "⚠️ 未安装 GitHub CLI (gh)，跳过 PR 创建"
+    echo "👉 请手动创建 PR 或访问：https://github.com 新建 Pull Request"
+    echo ""
+    echo "📝 PR 信息："
+    echo "   标题：$PREFIX: $TASK_DESC"
+    echo "   分支：$BRANCH -> main"
+    echo ""
+    echo "✅ 代码已推送！"
+    exit 0
+  fi
 
-# 检查 PR 是否已存在
-EXISTING_PR=$(gh pr list --head $BRANCH --state open --json number --jq '.[0].number')
+  if ! gh auth status &> /dev/null; then
+    echo "⚠️ 未登录 GitHub CLI，跳过 PR 创建"
+    echo "👉 请执行：gh auth login"
+    echo ""
+    echo "✅ 代码已推送！"
+    exit 0
+  fi
 
-if [ -n "$EXISTING_PR" ]; then
-  echo "⚠️ PR 已存在：https://github.com/$(gh repo view --json nameWithOwner --jq .nameWithOwner)/pull/$EXISTING_PR"
-else
-  echo "👉 创建 PR..."
-  gh pr create \
-    --title "$PREFIX: $TASK_DESC" \
-    --body "## 变更内容
+  if ! gh repo view &> /dev/null; then
+    echo "⚠️ 无法访问 GitHub 仓库，跳过 PR 创建"
+    echo "👉 请手动访问 GitHub 创建 PR"
+    echo ""
+    echo "✅ 代码已推送！"
+    exit 0
+  fi
+
+  # 检查 PR 是否已存在
+  EXISTING_PR=$(gh pr list --head $BRANCH --state open --json number --jq '.[0].number')
+
+  if [ -n "$EXISTING_PR" ]; then
+    echo "⚠️ PR 已存在：$(gh repo view --json url --jq .url)/pull/$EXISTING_PR"
+  else
+    echo "👉 创建 PR..."
+    gh pr create \
+      --title "$PREFIX: $TASK_DESC" \
+      --body "## 变更内容
 - $TASK_DESC
 
 ## 测试方式
 - 手动验证功能
 " \
-    --base main \
-    --head $BRANCH
+      --base main \
+      --head $BRANCH
+  fi
+
+elif [ "$REPO_TYPE" = "gitlab" ]; then
+  # GitLab: 使用 glab CLI 或提供手动指引
+  if command -v glab &> /dev/null && glab auth status &> /dev/null; then
+    echo "👉 使用 glab 创建 MR..."
+
+    # 检查 MR 是否已存在
+    EXISTING_MR=$(glab mr list --source-branch $BRANCH --state opened --json iid --jq '.[0].iid' 2>/dev/null)
+
+    if [ -n "$EXISTING_MR" ]; then
+      echo "⚠️ MR 已存在"
+    else
+      glab mr create \
+        --title "$PREFIX: $TASK_DESC" \
+        --description "## 变更内容
+- $TASK_DESC
+
+## 测试方式
+- 手动验证功能
+" \
+        --target-branch main \
+        --source-branch $BRANCH
+    fi
+  else
+    echo "⚠️ 未安装或未登录 GitLab CLI (glab)，跳过 MR 创建"
+    echo "👉 安装 glab: https://gitlab.com/gitlab-org/cli"
+    echo ""
+    echo "📝 请手动创建 MR："
+    REMOTE_WEB=$(echo "$REMOTE_URL" | sed 's/git@\(.*\):\(.*\)\.git/https:\/\/\1\/\2/' | sed 's/\.git$//')
+    echo "   访问：$REMOTE_WEB/merge_requests/new?merge_request[source_branch]=$BRANCH"
+    echo ""
+    echo "📝 MR 信息："
+    echo "   标题：$PREFIX: $TASK_DESC"
+    echo "   分支：$BRANCH -> main"
+    echo ""
+  fi
+
+else
+  # 其他 Git 服务
+  echo "⚠️ 未知远程仓库类型，跳过 MR/PR 创建"
+  echo ""
+  echo "📝 请手动创建 MR/PR："
+  echo "   分支：$BRANCH -> main"
+  echo "   标题：$PREFIX: $TASK_DESC"
+  echo ""
 fi
 
 echo "✅ 完成！🚀"

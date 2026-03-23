@@ -11,6 +11,8 @@
       "Bash(git branch:*)",
       "Bash(bash E:\\\\rektec\\\\agent-tools\\\\.claude\\\\skills\\\\git-workflow\\\\scripts\\\\auto-git.sh \"创建登录页面\" --commit)",
       "Bash(bash .claude/skills/git-workflow/scripts/auto-git.sh \"创建登录页面\" --commit)"
+      "Bash(bash .claude/skills/git-workflow/scripts/auto-git.sh \"编写完整使用流程文档\")",
+      "Bash(bash .claude/skills/git-workflow/scripts/auto-git.sh \"编写完整使用流程文档\" --commit)"
     ]
   }
 }
