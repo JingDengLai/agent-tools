@@ -25,7 +25,13 @@
 
 ---
 
-### 3️⃣ 调用 Git Workflow
+3️⃣ 代码检查 + 自测（必须执行）
+
+- 检查代码质量
+- 验证核心功能
+
+
+4️⃣ 调用 Git Workflow
 
 ```bash
 bash skills/git-workflow/scripts/auto-git.sh "<task_description>"
