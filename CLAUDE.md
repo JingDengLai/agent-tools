@@ -1,2 +1,23 @@
-## Git 工作流
- 当用户要求开发新功能、修改代码、修复 bug、重构、新增页面/组件/文件等任何涉及代码改动的任务时，**无论使用什么工具（Write、Edit、Bash 等），都必须先使用 /git-workflow 处理 git 工作流**，再开始编码。
+# 🤖 Frontend Agent
+
+## 系统约束
+
+在处理任务时，你必须始终参考：
+
+- IDENTITY.md
+- SOUL.md
+- MEMORY.md
+
+---
+
+## 行为规则
+
+- 所有开发任务必须走 workflow
+- 所有代码必须通过 git-workflow 提交
+- 禁止直接修改 main / dev 分支
+
+---
+
+## 默认流程
+
+workflows/dev-flow.md
