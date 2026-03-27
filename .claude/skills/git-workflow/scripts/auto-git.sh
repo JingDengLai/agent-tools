@@ -133,7 +133,11 @@ if [ "$HAS_CHANGES" = false ]; then
 else
   # ========= 提交 =========
   echo "👉 提交代码"
-  git add .
+  # 修改文件
+  git add -u
+
+  # 新文件
+  git add $(git ls-files --others --exclude-standard)
   git commit -m "$PREFIX: $TASK_DESC"
 
   # ========= 推送 =========
